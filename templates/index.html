@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}ホーム - コード読解トレーナー for AIコンサル{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <div class="hero-inner">
+    <h1 class="hero-title">コード読解トレーナー<br><span class="hero-sub">for AIコンサル</span></h1>
+    <p class="hero-lead">AIコンサルに必要なのは、コードを書く力だけではありません。<br>AIが作ったものを理解し、安全に説明する力が大切です。</p>
+    <div class="hero-desc">
+      <p>このアプリは、Claude CodeなどのAIツールが出力するコードやコマンドを読み解き、<br>中小企業のお客さんに分かりやすく説明できる力を鍛えるための練習アプリです。</p>
+    </div>
+    <div class="hero-actions">
+      <a href="{{ url_for('category', category_id='bash') }}" class="btn btn-primary">今日の練習を始める</a>
+      <a href="{{ url_for('quiz') }}" class="btn btn-outline">クイズに挑戦する</a>
+    </div>
+  </div>
+</div>
+
+<div class="progress-summary" id="progressSummary">
+  <div class="container">
+    <h2 class="section-title">学習の進捗</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="statLessons">0</div>
+        <div class="stat-label">学習済みレッスン</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="statQuiz">0</div>
+        <div class="stat-label">クイズ正解数</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="statDanger">0</div>
+        <div class="stat-label">危険度チェック正解</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="statStreak">0</div>
+        <div class="stat-label">連続正解数</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="categories-section">
+  <div class="container">
+    <h2 class="section-title">学習カテゴリ</h2>
+    <div class="category-grid">
+      {% set cat_order = ['bash', 'files', 'html', 'python', 'danger', 'scenarios'] %}
+      {% for cat_id in cat_order %}
+        {% set cat = categories[cat_id] %}
+        <a href="{{ url_for('category', category_id=cat_id) }}" class="category-card" data-category="{{ cat_id }}" style="--cat-color: {{ cat.color }}">
+          <div class="category-icon">{{ cat.icon }}</div>
+          <div class="category-info">
+            <h3 class="category-title">{{ cat.title }}</h3>
+            <p class="category-desc">{{ cat.description }}</p>
+          </div>
+          <div class="category-progress-bar">
+            <div class="category-progress-fill" id="progress-{{ cat_id }}" style="width: 0%"></div>
+          </div>
+          <div class="category-progress-text">
+            <span id="progress-text-{{ cat_id }}">0% 完了</span>
+          </div>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="quick-links-section">
+  <div class="container">
+    <h2 class="section-title">練習メニュー</h2>
+    <div class="quick-links-grid">
+      <a href="{{ url_for('quiz') }}" class="quick-link-card">
+        <div class="ql-icon">❓</div>
+        <h3>4択クイズ</h3>
+        <p>コマンドやコードの意味を4択で答える練習</p>
+      </a>
+      <a href="{{ url_for('danger_quiz') }}" class="quick-link-card">
+        <div class="ql-icon">⚠️</div>
+        <h3>危険度チェック</h3>
+        <p>コードを見て「安全」「注意」「危険」を判断する練習</p>
+      </a>
+      <a href="{{ url_for('code_breakdown') }}" class="quick-link-card">
+        <div class="ql-icon">🔍</div>
+        <h3>コード分解練習</h3>
+        <p>複数行のコマンドを1行ずつ読み解く練習</p>
+      </a>
+      <a href="{{ url_for('consultant_practice') }}" class="quick-link-card">
+        <div class="ql-icon">💬</div>
+        <h3>コンサル説明練習</h3>
+        <p>技術的な説明をお客さん向けに言い換える練習</p>
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="about-section">
+  <div class="container">
+    <div class="about-card">
+      <h2>このアプリで身につける力</h2>
+      <div class="about-grid">
+        <div class="about-item">
+          <span class="about-icon">✅</span>
+          <div>
+            <strong>読む力</strong>
+            <p>Claude Codeが何をしようとしているのか理解できる</p>
+          </div>
+        </div>
+        <div class="about-item">
+          <span class="about-icon">🛡️</span>
+          <div>
+            <strong>判断する力</strong>
+            <p>出てきたコードが安全か危険か判断できる</p>
+          </div>
+        </div>
+        <div class="about-item">
+          <span class="about-icon">💼</span>
+          <div>
+            <strong>提案する力</strong>
+            <p>中小企業の業務改善にどう使えるか考えられる</p>
+          </div>
+        </div>
+        <div class="about-item">
+          <span class="about-icon">🗣️</span>
+          <div>
+            <strong>説明する力</strong>
+            <p>お客さんに不安を与えずAI活用を説明できる</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    loadProgressStats();
+    loadCategoryProgress();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,82 @@
+[
+  {
+    "id": "dq001",
+    "code": "ls -la",
+    "level": "safe",
+    "reason": "ls はファイル一覧を表示するだけのコマンドです。何も変更・削除しません。-la は詳細情報と隠しファイルも表示するオプションです。",
+    "practical_note": "作業フォルダの確認に頻繁に使われます。Claude Codeが使用しているのを見ても心配ありません。",
+    "customer_explanation": "「フォルダの中に何があるか確認しています。ファイルを見るだけで、何も変更しません。」"
+  },
+  {
+    "id": "dq002",
+    "code": "rm -rf /Users/umamizushogo/old_project",
+    "level": "danger",
+    "reason": "rm -rf は確認なしにファイルを強制削除します。ゴミ箱には入らず、元に戻せません。削除対象のパスを必ず確認してください。",
+    "practical_note": "削除対象のフォルダに重要なファイルがないかを必ず確認してから実行してください。バックアップを取ってから実行することを推奨します。",
+    "customer_explanation": "「このコマンドはデータを永久に削除します。ゴミ箱には入りません。必ず内容を確認してから実行してください。」"
+  },
+  {
+    "id": "dq003",
+    "code": "python3 web_app.py",
+    "level": "caution",
+    "reason": "Pythonファイルを実行するコマンドです。ローカルでFlaskサーバーを起動するなら通常は安全ですが、実行するファイルの内容によっては外部通信や危険な処理が含まれる場合があります。",
+    "practical_note": "実行するPythonファイルの内容（特にimport文とルート定義）を事前に確認することを推奨します。",
+    "customer_explanation": "「Pythonのアプリを起動しています。起動するアプリが何をするかによって安全性が変わります。」"
+  },
+  {
+    "id": "dq004",
+    "code": "sudo rm -rf /etc/config",
+    "level": "danger",
+    "reason": "sudoは管理者権限でコマンドを実行します。rm -rfと組み合わせてシステムファイルを削除しています。/etcはOSの重要な設定ファイルが入ったフォルダです。実行するとOSが起動しなくなる可能性があります。",
+    "practical_note": "このコマンドは絶対に確認なしで実行してはいけません。なぜこのコマンドが必要なのかを必ず確認してください。",
+    "customer_explanation": "「このコマンドはパソコンの重要な設定ファイルを管理者権限で削除しています。実行するとパソコンが起動しなくなる可能性があります。絶対に実行しないでください。」"
+  },
+  {
+    "id": "dq005",
+    "code": "curl -s http://localhost:5001/api/health",
+    "level": "safe",
+    "reason": "localhostへのcurlリクエストです。自分のパソコン内だけに通信するため、外部には一切データが送られません。サーバーが正常に動いているか確認するためによく使われます。",
+    "practical_note": "APIのヘルスチェック（動作確認）によく使われるパターンです。",
+    "customer_explanation": "「自分のパソコン内でアプリが正常に動いているかテストしています。外部には通信しません。」"
+  },
+  {
+    "id": "dq006",
+    "code": "API_KEY = 'sk-proj-abc123xyz456def789'",
+    "level": "danger",
+    "reason": "APIキーをコードに直書きしています。このコードがGitHubなどに公開されると、ボットにAPIキーが盗まれ不正利用される危険があります。高額な請求が発生する場合もあります。",
+    "practical_note": "APIキーは必ず環境変数（.envファイル）で管理し、コードには書かないでください。.envファイルは.gitignoreに追加してGitHubに上がらないようにします。",
+    "customer_explanation": "「APIキーが直接コードに書かれています。家の鍵をSNSに投稿するようなものです。環境変数を使った管理に変更が必要です。」"
+  },
+  {
+    "id": "dq007",
+    "code": "mkdir -p my_project/data\ntouch my_project/app.py\ncd my_project",
+    "level": "safe",
+    "reason": "フォルダを作成して、空のファイルを作り、そのフォルダに移動する一連のコマンドです。すべて新規作成のみで、既存ファイルへの変更・削除は行いません。",
+    "practical_note": "Claude Codeが新しいプロジェクトを始める際の典型的なパターンです。",
+    "customer_explanation": "「新しいプロジェクトのフォルダとファイルを準備しています。新規作成のみで既存ファイルには触れません。」"
+  },
+  {
+    "id": "dq008",
+    "code": "requests.post('https://api.example.com/collect',\n  json={'name': user_name, 'email': user_email})",
+    "level": "danger",
+    "reason": "外部サービスにユーザーの氏名とメールアドレスを送信しています。個人情報を第三者のサーバーに送る処理です。個人情報保護法の観点から、本人の同意と送信先サービスの利用規約確認が必要です。",
+    "practical_note": "送信先のURLがどのサービスか、そのサービスの利用規約で個人情報の取り扱いがどう記載されているかを確認してください。",
+    "customer_explanation": "「お客さんの個人情報を外部サービスに送っています。これは個人情報保護法の確認と本人の同意が必要な処理です。」"
+  },
+  {
+    "id": "dq009",
+    "code": "pkill -f web_app.py 2>/dev/null\nsleep 2\npython3 web_app.py &",
+    "level": "caution",
+    "reason": "古いサーバーを止めて（pkill）、2秒待ち（sleep）、新しいサーバーをバックグラウンドで起動（python3 &）するスクリプトです。各コマンド自体は安全ですが、起動するアプリの内容によります。",
+    "practical_note": "サーバーを再起動するよく使われるパターンです。起動するweb_app.pyの内容を確認してください。",
+    "customer_explanation": "「古いサーバーを止めて、新しいバージョンのサーバーを起動しています。アプリの再起動処理です。」"
+  },
+  {
+    "id": "dq010",
+    "code": "@app.route('/admin')\ndef admin_panel():\n    users = db.get_all_users()\n    return jsonify(users)",
+    "level": "danger",
+    "reason": "認証（ログイン確認）なしに/adminというURLで全ユーザーのデータを返しています。このURLを知っている人なら誰でも全ユーザーの情報にアクセスできます。@login_requiredなどの認証デコレーターが必要です。",
+    "practical_note": "管理系のURLには必ずログイン確認を追加してください。ローカル環境でも習慣として認証を実装することを推奨します。",
+    "customer_explanation": "「管理画面に鍵（ログイン認証）がついていません。URLを知っていれば誰でも全顧客データを見られる状態です。必ずパスワード保護が必要です。」"
+  }
+]

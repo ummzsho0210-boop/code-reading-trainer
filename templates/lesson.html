@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}{{ lesson.title }} - コード読解トレーナー{% endblock %}
+
+{% block content %}
+<div class="lesson-page">
+  <div class="container">
+    <div class="breadcrumb">
+      <a href="{{ url_for('index') }}">ホーム</a> &rsaquo;
+      <a href="{{ url_for('category', category_id=category_id) }}">{{ category.title }}</a> &rsaquo;
+      {{ lesson.title }}
+    </div>
+
+    <div class="lesson-header">
+      <div class="lesson-title-area">
+        <span class="lesson-category-badge" style="background: {{ category.color }}20; color: {{ category.color }}">{{ category.icon }} {{ category.title }}</span>
+        <h1>{{ lesson.title }}</h1>
+      </div>
+      <div class="lesson-safety-area">
+        <span class="safety-badge safety-{{ lesson.safety_level }} safety-large">
+          {% if lesson.safety_level == 'safe' %}🟢 安全度：安全
+          {% elif lesson.safety_level == 'caution' %}🟡 安全度：注意
+          {% else %}🔴 安全度：危険{% endif %}
+        </span>
+      </div>
+    </div>
+
+    <div class="code-block">
+      <div class="code-block-label">コード例</div>
+      <pre><code>{{ lesson.code_example }}</code></pre>
+    </div>
+
+    <div class="lesson-sections">
+      <div class="lesson-section">
+        <div class="section-header">
+          <span class="section-icon">💡</span>
+          <h2>これは何？</h2>
+        </div>
+        <div class="section-content">
+          <p>{{ lesson.what_is_it }}</p>
+        </div>
+      </div>
+
+      <div class="lesson-section">
+        <div class="section-header">
+          <span class="section-icon">👀</span>
+          <h2>どこを見る？</h2>
+        </div>
+        <div class="section-content">
+          <p>{{ lesson.where_to_look }}</p>
+        </div>
+      </div>
+
+      <div class="lesson-section">
+        <div class="section-header">
+          <span class="section-icon">🔧</span>
+          <h2>何に使える？</h2>
+        </div>
+        <div class="section-content">
+          <p>{{ lesson.what_for }}</p>
+        </div>
+      </div>
+
+      <div class="lesson-section section-highlight">
+        <div class="section-header">
+          <span class="section-icon">🗣️</span>
+          <h2>お客さんに説明するなら？</h2>
+        </div>
+        <div class="section-content">
+          <blockquote class="customer-quote">{{ lesson.customer_explanation }}</blockquote>
+        </div>
+      </div>
+
+      <div class="lesson-section section-caution">
+        <div class="section-header">
+          <span class="section-icon">⚠️</span>
+          <h2>注意点</h2>
+        </div>
+        <div class="section-content">
+          <p>{{ lesson.cautions }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="lesson-complete-area" id="lessonCompleteArea">
+      <button class="btn btn-success btn-large" id="completeBtn" onclick="markLessonComplete('{{ lesson.id }}')">
+        ✅ このレッスンを完了にする
+      </button>
+      <p class="complete-note">学習した内容を記録します</p>
+    </div>
+
+    <div class="lesson-navigation">
+      {% if prev_lesson %}
+      <a href="{{ url_for('lesson', lesson_id=prev_lesson.id) }}" class="btn btn-outline lesson-nav-btn">
+        ← {{ prev_lesson.title }}
+      </a>
+      {% else %}
+      <div></div>
+      {% endif %}
+
+      <a href="{{ url_for('category', category_id=category_id) }}" class="btn btn-ghost">一覧に戻る</a>
+
+      {% if next_lesson %}
+      <a href="{{ url_for('lesson', lesson_id=next_lesson.id) }}" class="btn btn-outline lesson-nav-btn">
+        {{ next_lesson.title }} →
+      </a>
+      {% else %}
+      <div></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    checkLessonCompleted('{{ lesson.id }}');
+  });
+</script>
+{% endblock %}

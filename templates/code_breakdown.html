@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}コード分解練習 - コード読解トレーナー{% endblock %}
+
+{% block content %}
+<div class="page-header" style="--cat-color: #10B981">
+  <div class="container">
+    <div class="breadcrumb"><a href="{{ url_for('index') }}">ホーム</a> &rsaquo; コード分解練習</div>
+    <div class="page-header-content">
+      <span class="page-header-icon">🔍</span>
+      <div>
+        <h1>コード分解練習</h1>
+        <p>複数行のコードやコマンドを1行ずつ読み解いて理解を深めましょう</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="breakdown-selector">
+    <h2>練習問題を選んでください</h2>
+    <div class="breakdown-tabs">
+      {% for bd in breakdowns %}
+      <button class="breakdown-tab {% if loop.first %}active{% endif %}"
+              data-index="{{ loop.index0 }}"
+              onclick="selectBreakdown({{ loop.index0 }})">
+        {% if bd.has_danger %}<span class="danger-indicator">⚠️</span>{% endif %}
+        {{ bd.title }}
+      </button>
+      {% endfor %}
+    </div>
+  </div>
+
+  {% for bd in breakdowns %}
+  <div class="breakdown-content {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}">
+    {% if bd.has_danger %}
+    <div class="danger-warning-banner">
+      ⚠️ この例は教育目的の危険なコード例です。実際には使用しないでください。
+    </div>
+    {% endif %}
+
+    <div class="breakdown-overview">
+      <h2>全体の説明</h2>
+      <p>{{ bd.overall_description }}</p>
+    </div>
+
+    <div class="breakdown-instructions">
+      <p class="instruction-text">👇 各行をクリックすると説明が表示されます</p>
+    </div>
+
+    <div class="breakdown-code-area">
+      {% for line in bd.lines %}
+      <div class="breakdown-line" onclick="toggleLine(this)">
+        <div class="breakdown-line-code">
+          <span class="line-number">{{ loop.index }}</span>
+          <span class="safety-dot safety-dot-{{ line.safety }}"></span>
+          <pre><code>{{ line.code }}</code></pre>
+          <span class="expand-icon">▼</span>
+        </div>
+        <div class="breakdown-line-explanation">
+          <div class="explanation-content">
+            <span class="safety-badge safety-{{ line.safety }}">
+              {% if line.safety == 'safe' %}🟢 安全
+              {% elif line.safety == 'caution' %}🟡 注意
+              {% else %}🔴 危険{% endif %}
+            </span>
+            <p>{{ line.explanation }}</p>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="breakdown-summary">
+      <h3>✅ 確認ポイント</h3>
+      <ul>
+        {% for point in bd.points_to_check %}
+        <li>{{ point }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    {% if bd.has_danger %}
+    <div class="breakdown-danger-note">
+      <h3>⚠️ この例の問題点</h3>
+      <p>{{ bd.danger_note }}</p>
+    </div>
+    {% endif %}
+
+    <div class="breakdown-customer-section">
+      <h3>🗣️ お客さんへの説明</h3>
+      <blockquote class="customer-quote">{{ bd.customer_summary }}</blockquote>
+    </div>
+
+    <div class="breakdown-expand-all">
+      <button class="btn btn-outline" onclick="expandAll(this)">すべて展開する</button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function selectBreakdown(index) {
+    document.querySelectorAll('.breakdown-tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelectorAll('.breakdown-content').forEach(content => content.classList.remove('active'));
+    document.querySelector(`.breakdown-tab[data-index="${index}"]`).classList.add('active');
+    document.querySelector(`.breakdown-content[data-index="${index}"]`).classList.add('active');
+  }
+
+  function toggleLine(el) {
+    el.classList.toggle('open');
+    const icon = el.querySelector('.expand-icon');
+    icon.textContent = el.classList.contains('open') ? '▲' : '▼';
+  }
+
+  function expandAll(btn) {
+    const content = btn.closest('.breakdown-content');
+    const lines = content.querySelectorAll('.breakdown-line');
+    const allOpen = [...lines].every(l => l.classList.contains('open'));
+    lines.forEach(line => {
+      if (allOpen) {
+        line.classList.remove('open');
+        const icon = line.querySelector('.expand-icon');
+        if (icon) icon.textContent = '▼';
+      } else {
+        line.classList.add('open');
+        const icon = line.querySelector('.expand-icon');
+        if (icon) icon.textContent = '▲';
+      }
+    });
+    btn.textContent = allOpen ? 'すべて展開する' : 'すべて閉じる';
+  }
+</script>
+{% endblock %}

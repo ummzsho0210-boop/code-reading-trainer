@@ -1,0 +1,143 @@
+[
+  {
+    "id": "cb001",
+    "title": "サーバーを再起動してテストするスクリプト",
+    "overall_description": "古いサーバーを止め、プロジェクトフォルダに移動し、新しいサーバーを起動して動作確認するまでの一連の処理です。Claude Codeがアプリの動作確認をするときによく使うパターンです。",
+    "has_danger": false,
+    "danger_note": "",
+    "points_to_check": [
+      "pkillが止めようとしているプロセスが正しいか確認",
+      "cdの移動先フォルダが正しいか確認",
+      "起動するPythonファイルの内容を事前に確認"
+    ],
+    "customer_summary": "「古いサーバーを止めて、プロジェクトフォルダに移動し、新しいサーバーを裏で起動して、少し待ってから動作確認をしています。アプリの再起動と確認の自動化です。」",
+    "lines": [
+      {
+        "code": "pkill -f web_app.py 2>/dev/null",
+        "explanation": "「web_app.py」という名前のプロセス（動作中のプログラム）を検索して停止します。2>/dev/null は「エラーが出ても画面に表示しない」という設定です。もし動いていなくても無視して次に進みます。",
+        "safety": "caution"
+      },
+      {
+        "code": "cd /Users/umamizushogo/itp-study",
+        "explanation": "「/Users/umamizushogo/itp-study」というフォルダに移動します。次のコマンドはこのフォルダの中で実行されます。",
+        "safety": "safe"
+      },
+      {
+        "code": "python3 web_app.py &",
+        "explanation": "「web_app.py」というPythonファイルをバックグラウンド（裏側）で実行します。& がバックグラウンド実行の指示です。サーバーが起動し続けながら、ターミナルで次のコマンドも使えます。",
+        "safety": "caution"
+      },
+      {
+        "code": "sleep 2",
+        "explanation": "2秒間待ちます。サーバーが完全に起動するまでの時間を確保します。すぐに次のコマンドを実行するとサーバーがまだ準備できていない場合があるためです。",
+        "safety": "safe"
+      },
+      {
+        "code": "curl -s http://localhost:5001/quiz",
+        "explanation": "「http://localhost:5001/quiz」にHTTPリクエストを送り、サーバーからの応答を確認します。-s はエラーメッセージを省略するオプションです。localhost は自分のパソコンを指すため、外部には通信しません。",
+        "safety": "safe"
+      }
+    ]
+  },
+  {
+    "id": "cb002",
+    "title": "Pythonの仮想環境を作ってアプリをセットアップするスクリプト",
+    "overall_description": "Pythonの仮想環境（プロジェクト専用のPython環境）を作成し、必要なライブラリをインストールして、アプリを起動するまでの一連の準備処理です。",
+    "has_danger": false,
+    "danger_note": "",
+    "points_to_check": [
+      "requirements.txtの内容（インストールするライブラリ一覧）を確認",
+      "インストールするライブラリに不審なものがないか確認",
+      "起動するアプリの内容を確認"
+    ],
+    "customer_summary": "「このアプリ専用のPython環境を作り、必要なツールをインストールして、アプリを起動しています。新しいパソコンにアプリをセットアップするときの手順です。」",
+    "lines": [
+      {
+        "code": "python3 -m venv venv",
+        "explanation": "「venv」という名前のPython仮想環境（このプロジェクト専用のPython環境）を作成します。他のプロジェクトに影響を与えないよう、ライブラリを分離して管理するための仕組みです。",
+        "safety": "safe"
+      },
+      {
+        "code": "source venv/bin/activate",
+        "explanation": "作成した仮想環境を有効にします。これ以降のコマンドは、この仮想環境の中で実行されます。ターミナルのプロンプトに「(venv)」と表示されれば有効化成功です。",
+        "safety": "safe"
+      },
+      {
+        "code": "pip install -r requirements.txt",
+        "explanation": "「requirements.txt」に書かれたライブラリ一覧を一括インストールします。pipはPythonのライブラリ管理ツールです。インターネットからライブラリをダウンロードします。",
+        "safety": "caution"
+      },
+      {
+        "code": "python3 app.py",
+        "explanation": "「app.py」というPythonファイルを実行してアプリを起動します。通常はここでFlaskサーバーが起動し、ブラウザからアクセスできるようになります。",
+        "safety": "caution"
+      }
+    ]
+  },
+  {
+    "id": "cb003",
+    "title": "CSVファイルを読み込んでレポートを生成するスクリプト",
+    "overall_description": "CSVファイルを読み込み、データを処理してJSONファイルに保存し、レポートを生成するPythonコードです。業務自動化スクリプトの典型的なパターンです。",
+    "has_danger": false,
+    "danger_note": "",
+    "points_to_check": [
+      "読み込むCSVに個人情報が含まれていないか確認",
+      "生成されたファイルの保存先を確認",
+      "外部へのデータ送信がないか確認"
+    ],
+    "customer_summary": "「CSVファイルのデータを読み込んで集計し、結果をJSONファイルに保存して、レポートを生成しています。すべてこのパソコン内で完結しており、外部には送信しません。」",
+    "lines": [
+      {
+        "code": "import csv\nimport json\nfrom datetime import datetime",
+        "explanation": "必要なライブラリを読み込みます。csvはCSVファイルの処理、jsonはJSONデータの処理、datetimeは日時の処理に使います。すべてPythonの標準ライブラリで、外部通信はしません。",
+        "safety": "safe"
+      },
+      {
+        "code": "with open('sales_data.csv', 'r', encoding='utf-8') as f:\n    reader = csv.DictReader(f)\n    rows = list(reader)",
+        "explanation": "「sales_data.csv」というCSVファイルを読み込みます。DictReaderは各行を辞書形式（列名と値のペア）で読み込みます。encoding='utf-8'は日本語を正しく読み込むための設定です。",
+        "safety": "safe"
+      },
+      {
+        "code": "total = sum(float(row['売上']) for row in rows)",
+        "explanation": "CSVの各行から「売上」列の値を取り出して合計を計算します。sum()は合計計算、float()は文字列を数値に変換する関数です。",
+        "safety": "safe"
+      },
+      {
+        "code": "with open('report.json', 'w', encoding='utf-8') as f:\n    json.dump({'合計売上': total, '件数': len(rows)}, f, ensure_ascii=False)",
+        "explanation": "集計結果を「report.json」というJSONファイルに保存します。ensure_ascii=Falseで日本語をそのまま保存できます。このパソコン内への保存のみで、外部への送信はしません。",
+        "safety": "safe"
+      }
+    ]
+  },
+  {
+    "id": "cb004",
+    "title": "危険なコード例：個人情報の外部送信スクリプト",
+    "overall_description": "⚠️ このスクリプトは教育目的の危険な例です。実際には使用しないでください。個人情報を外部サービスに送信しており、個人情報保護法への対応が必要なコードです。",
+    "has_danger": true,
+    "danger_note": "このコードには2つの危険な問題があります：①APIキーがコードに直書きされている（環境変数で管理すべき）、②顧客の個人情報が外部サービスに送信されている（本人同意と利用規約確認が必要）",
+    "points_to_check": [
+      "APIキーを環境変数（.envファイル）に移動する",
+      "個人情報の外部送信に本人同意が取れているか確認",
+      "送信先サービスの個人情報取り扱いポリシーを確認",
+      "通信がHTTPS（暗号化）になっているか確認"
+    ],
+    "customer_summary": "「このコードには問題があります。APIキーが直書きされていることと、お客さんの個人情報が外部サービスに送られていることを必ず修正・確認する必要があります。」",
+    "lines": [
+      {
+        "code": "import requests\nAPI_KEY = 'sk-proj-abc123xyz456'",
+        "explanation": "⚠️ 危険：requestsライブラリ（外部通信用）を読み込み、APIキーをコードに直書きしています。このコードがGitHubに公開されるとAPIキーが盗まれます。正しくはos.environ.get('API_KEY')で環境変数から読み込むべきです。",
+        "safety": "danger"
+      },
+      {
+        "code": "customer_data = {\n    'name': '田中太郎',\n    'email': 'tanaka@example.com',\n    'phone': '090-xxxx-xxxx'\n}",
+        "explanation": "顧客の個人情報（氏名・メール・電話番号）を変数に格納しています。この時点ではまだ外部には送られていませんが、次の処理で外部に送信されます。",
+        "safety": "caution"
+      },
+      {
+        "code": "response = requests.post(\n    'https://external-api.example.com/analyze',\n    headers={'Authorization': f'Bearer {API_KEY}'},\n    json=customer_data\n)",
+        "explanation": "⚠️ 危険：顧客の個人情報を外部サービスに送信しています。送信先のサービスがこのデータをどう扱うか（保存するか、学習に使うか）を必ず確認する必要があります。個人情報保護法の対応も必要です。",
+        "safety": "danger"
+      }
+    ]
+  }
+]

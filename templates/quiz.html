@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% block title %}クイズ - コード読解トレーナー{% endblock %}
+
+{% block content %}
+<div class="page-header" style="--cat-color: #3B82F6">
+  <div class="container">
+    <div class="breadcrumb"><a href="{{ url_for('index') }}">ホーム</a> &rsaquo; クイズ</div>
+    <div class="page-header-content">
+      <span class="page-header-icon">❓</span>
+      <div>
+        <h1>4択クイズ</h1>
+        <p>コードやコマンドの意味を4択で答えて、理解度を確認しましょう</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div id="quizSetup" class="quiz-setup">
+    <h2>カテゴリを選んでください</h2>
+    <div class="category-select-grid">
+      <button class="category-select-btn active" data-category="all">
+        <span>📚</span> すべて
+      </button>
+      {% for cat_id, cat in categories.items() %}
+      <button class="category-select-btn" data-category="{{ cat_id }}">
+        <span>{{ cat.icon }}</span> {{ cat.title }}
+      </button>
+      {% endfor %}
+    </div>
+    <div class="quiz-start-area">
+      <div class="quiz-stats-preview">
+        <span id="quizCountPreview">問題数を確認中...</span>
+      </div>
+      <button class="btn btn-primary btn-large" id="startQuizBtn" onclick="startQuiz()">クイズを開始する</button>
+    </div>
+  </div>
+
+  <div id="quizArea" class="quiz-area" style="display:none">
+    <div class="quiz-progress-bar-container">
+      <div class="quiz-progress-bar-fill" id="quizProgressBar" style="width: 0%"></div>
+    </div>
+    <div class="quiz-progress-text">
+      <span id="quizCurrentNum">1</span> / <span id="quizTotalNum">10</span> 問
+      <span class="quiz-score-inline">正解: <span id="quizScoreInline">0</span></span>
+    </div>
+
+    <div class="quiz-card">
+      <div class="quiz-category-tag" id="quizCategoryTag"></div>
+      <h2 class="quiz-question" id="quizQuestion"></h2>
+      <div class="quiz-options" id="quizOptions"></div>
+    </div>
+
+    <div id="quizResult" class="quiz-result" style="display:none">
+      <div class="result-badge" id="resultBadge"></div>
+      <div class="result-explanation">
+        <h3>解説</h3>
+        <p id="resultExplanation"></p>
+      </div>
+      <div class="result-wrong-explanations" id="resultWrongExplanations"></div>
+      <div class="result-consultant-note">
+        <h3>💼 AIコンサル視点での補足</h3>
+        <p id="resultConsultantNote"></p>
+      </div>
+      <button class="btn btn-primary" id="nextQuizBtn" onclick="nextQuestion()">次の問題へ →</button>
+    </div>
+  </div>
+
+  <div id="quizFinish" class="quiz-finish" style="display:none">
+    <div class="finish-icon">🎉</div>
+    <h2>クイズ完了！</h2>
+    <div class="finish-score">
+      <span id="finalScore"></span> 問正解
+      <span class="finish-total">/ <span id="finalTotal"></span> 問</span>
+    </div>
+    <div class="finish-rate" id="finishRate"></div>
+    <div class="finish-actions">
+      <button class="btn btn-primary" onclick="restartQuiz()">もう一度挑戦</button>
+      <a href="{{ url_for('index') }}" class="btn btn-outline">ホームへ戻る</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const categoriesData = {{ categories | tojson }};
+  let allQuizzes = [];
+  let currentQuizzes = [];
+  let currentIndex = 0;
+  let score = 0;
+  let selectedCategory = 'all';
+  let streak = 0;
+
+  document.addEventListener('DOMContentLoaded', async function() {
+    await loadAllQuizzes();
+    setupCategoryButtons();
+    updateQuizCountPreview();
+
+    // URLパラメータからカテゴリを設定
+    const urlParams = new URLSearchParams(window.location.search);
+    const cat = urlParams.get('category');
+    if (cat) {
+      selectCategory(cat);
+    }
+  });
+
+  async function loadAllQuizzes() {
+    const res = await fetch('/api/quizzes');
+    allQuizzes = await res.json();
+  }
+
+  function setupCategoryButtons() {
+    document.querySelectorAll('.category-select-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.category-select-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        selectedCategory = this.dataset.category;
+        updateQuizCountPreview();
+      });
+    });
+  }
+
+  function selectCategory(catId) {
+    document.querySelectorAll('.category-select-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.querySelector(`[data-category="${catId}"]`);
+    if (btn) {
+      btn.classList.add('active');
+      selectedCategory = catId;
+      updateQuizCountPreview();
+    }
+  }
+
+  function updateQuizCountPreview() {
+    const filtered = selectedCategory === 'all'
+      ? allQuizzes
+      : allQuizzes.filter(q => q.category === selectedCategory);
+    document.getElementById('quizCountPreview').textContent = `${filtered.length}問のクイズが用意されています`;
+  }
+
+  function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function startQuiz() {
+    const filtered = selectedCategory === 'all'
+      ? allQuizzes
+      : allQuizzes.filter(q => q.category === selectedCategory);
+    currentQuizzes = shuffleArray(filtered);
+    currentIndex = 0;
+    score = 0;
+    streak = 0;
+
+    document.getElementById('quizSetup').style.display = 'none';
+    document.getElementById('quizArea').style.display = 'block';
+    document.getElementById('quizFinish').style.display = 'none';
+    document.getElementById('quizTotalNum').textContent = currentQuizzes.length;
+
+    showQuestion();
+  }
+
+  function showQuestion() {
+    if (currentIndex >= currentQuizzes.length) {
+      showFinish();
+      return;
+    }
+
+    const q = currentQuizzes[currentIndex];
+    document.getElementById('quizResult').style.display = 'none';
+    document.getElementById('quizCurrentNum').textContent = currentIndex + 1;
+    document.getElementById('quizScoreInline').textContent = score;
+
+    const progress = ((currentIndex) / currentQuizzes.length) * 100;
+    document.getElementById('quizProgressBar').style.width = progress + '%';
+
+    const catName = categoriesData[q.category] ? categoriesData[q.category].title : q.category;
+    document.getElementById('quizCategoryTag').textContent = catName;
+    document.getElementById('quizQuestion').textContent = q.question;
+
+    const optionsEl = document.getElementById('quizOptions');
+    optionsEl.innerHTML = '';
+    const labels = ['A', 'B', 'C', 'D'];
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'quiz-option-btn';
+      btn.innerHTML = `<span class="option-label">${labels[idx]}</span><span class="option-text">${opt}</span>`;
+      btn.onclick = () => selectAnswer(idx, q);
+      optionsEl.appendChild(btn);
+    });
+  }
+
+  function selectAnswer(selectedIdx, q) {
+    document.querySelectorAll('.quiz-option-btn').forEach(btn => btn.disabled = true);
+
+    const isCorrect = selectedIdx === q.correct;
+    if (isCorrect) {
+      score++;
+      streak++;
+      updateProgress('quizCorrect', score);
+      updateProgress('streak', streak);
+    } else {
+      streak = 0;
+      updateProgress('streak', 0);
+    }
+
+    document.querySelectorAll('.quiz-option-btn').forEach((btn, idx) => {
+      if (idx === q.correct) btn.classList.add('correct');
+      else if (idx === selectedIdx && !isCorrect) btn.classList.add('wrong');
+    });
+
+    const resultEl = document.getElementById('quizResult');
+    const badgeEl = document.getElementById('resultBadge');
+    badgeEl.textContent = isCorrect ? '✅ 正解！' : '❌ 不正解';
+    badgeEl.className = 'result-badge ' + (isCorrect ? 'correct' : 'wrong');
+    document.getElementById('resultExplanation').textContent = q.explanation;
+    document.getElementById('resultConsultantNote').textContent = q.consultant_note;
+
+    const wrongEl = document.getElementById('resultWrongExplanations');
+    wrongEl.innerHTML = '';
+    if (!isCorrect && q.wrong_explanations) {
+      const note = q.wrong_explanations[String(selectedIdx)];
+      if (note) {
+        wrongEl.innerHTML = `<div class="wrong-note"><strong>選んだ選択肢について：</strong>${note}</div>`;
+      }
+    }
+
+    resultEl.style.display = 'block';
+
+    const nextBtn = document.getElementById('nextQuizBtn');
+    nextBtn.textContent = currentIndex + 1 >= currentQuizzes.length ? '結果を見る' : '次の問題へ →';
+  }
+
+  function nextQuestion() {
+    currentIndex++;
+    if (currentIndex >= currentQuizzes.length) {
+      showFinish();
+    } else {
+      showQuestion();
+    }
+  }
+
+  function showFinish() {
+    document.getElementById('quizArea').style.display = 'none';
+    document.getElementById('quizFinish').style.display = 'block';
+    document.getElementById('finalScore').textContent = score;
+    document.getElementById('finalTotal').textContent = currentQuizzes.length;
+    const rate = Math.round((score / currentQuizzes.length) * 100);
+    let message = '';
+    if (rate === 100) message = '🏆 完璧です！素晴らしい！';
+    else if (rate >= 80) message = '👏 よくできました！';
+    else if (rate >= 60) message = '📚 もう少し復習しましょう';
+    else message = '💪 レッスンを見直してから再チャレンジ！';
+    document.getElementById('finishRate').innerHTML = `<span class="rate-num">${rate}%</span> ${message}`;
+  }
+
+  function restartQuiz() {
+    document.getElementById('quizFinish').style.display = 'none';
+    document.getElementById('quizSetup').style.display = 'block';
+    updateQuizCountPreview();
+  }
+</script>
+{% endblock %}

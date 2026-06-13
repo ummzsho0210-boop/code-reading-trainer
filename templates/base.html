@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}コード読解トレーナー for AIコンサル{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="{{ url_for('index') }}" class="site-title">
+        <span class="site-icon">📖</span>
+        <span>コード読解トレーナー <small>for AIコンサル</small></span>
+      </a>
+      <nav class="main-nav">
+        <a href="{{ url_for('index') }}">ホーム</a>
+        <a href="{{ url_for('quiz') }}">クイズ</a>
+        <a href="{{ url_for('danger_quiz') }}">危険度チェック</a>
+        <a href="{{ url_for('code_breakdown') }}">コード分解</a>
+        <a href="{{ url_for('consultant_practice') }}">コンサル練習</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <p>コード読解トレーナー for AIコンサル &mdash; AIを活用して中小企業の業務改善を支援するための練習アプリ</p>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

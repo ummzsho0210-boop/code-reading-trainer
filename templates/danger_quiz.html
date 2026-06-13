@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block title %}危険度チェック - コード読解トレーナー{% endblock %}
+
+{% block content %}
+<div class="page-header" style="--cat-color: #EF4444">
+  <div class="container">
+    <div class="breadcrumb"><a href="{{ url_for('index') }}">ホーム</a> &rsaquo; 危険度チェック</div>
+    <div class="page-header-content">
+      <span class="page-header-icon">⚠️</span>
+      <div>
+        <h1>危険度チェッククイズ</h1>
+        <p>コードやコマンドを見て「安全」「注意」「危険」を判断する練習です</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div id="dangerSetup" class="quiz-setup">
+    <div class="danger-intro">
+      <p>AIコンサルとして最も重要なスキルの一つが「危険な処理を見分ける力」です。</p>
+      <p>表示されるコードを見て、安全度を判断してください。</p>
+      <div class="danger-legend">
+        <span class="safety-badge safety-safe">🟢 安全</span>
+        <span class="safety-badge safety-caution">🟡 注意</span>
+        <span class="safety-badge safety-danger">🔴 危険</span>
+      </div>
+    </div>
+    <button class="btn btn-primary btn-large" onclick="startDangerQuiz()">チェックを開始する</button>
+  </div>
+
+  <div id="dangerArea" style="display:none">
+    <div class="quiz-progress-bar-container">
+      <div class="quiz-progress-bar-fill" id="dangerProgressBar" style="width: 0%"></div>
+    </div>
+    <div class="quiz-progress-text">
+      <span id="dangerCurrentNum">1</span> / <span id="dangerTotalNum">10</span> 問
+      <span class="quiz-score-inline">正解: <span id="dangerScoreInline">0</span></span>
+    </div>
+
+    <div class="danger-quiz-card">
+      <div class="danger-quiz-label">このコードの危険度は？</div>
+      <div class="code-block">
+        <pre><code id="dangerCode"></code></pre>
+      </div>
+      <div class="danger-options">
+        <button class="danger-btn danger-btn-safe" onclick="selectDanger('safe')">
+          🟢 安全
+        </button>
+        <button class="danger-btn danger-btn-caution" onclick="selectDanger('caution')">
+          🟡 注意
+        </button>
+        <button class="danger-btn danger-btn-danger" onclick="selectDanger('danger')">
+          🔴 危険
+        </button>
+      </div>
+    </div>
+
+    <div id="dangerResult" class="danger-result" style="display:none">
+      <div class="result-badge" id="dangerResultBadge"></div>
+      <div class="danger-result-content">
+        <div class="danger-result-section">
+          <h3>正解の安全度</h3>
+          <div class="danger-answer" id="dangerAnswer"></div>
+        </div>
+        <div class="danger-result-section">
+          <h3>⚙️ 理由</h3>
+          <p id="dangerReason"></p>
+        </div>
+        <div class="danger-result-section">
+          <h3>💼 実務での注意点</h3>
+          <p id="dangerPractical"></p>
+        </div>
+        <div class="danger-result-section section-highlight">
+          <h3>🗣️ お客さんへの説明</h3>
+          <blockquote id="dangerCustomer"></blockquote>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="dangerNextBtn" onclick="nextDangerQuestion()">次へ →</button>
+    </div>
+  </div>
+
+  <div id="dangerFinish" class="quiz-finish" style="display:none">
+    <div class="finish-icon">🛡️</div>
+    <h2>危険度チェック完了！</h2>
+    <div class="finish-score">
+      <span id="dangerFinalScore"></span> 問正解
+      <span class="finish-total">/ <span id="dangerFinalTotal"></span> 問</span>
+    </div>
+    <div class="finish-rate" id="dangerFinishRate"></div>
+    <div class="finish-actions">
+      <button class="btn btn-primary" onclick="restartDangerQuiz()">もう一度挑戦</button>
+      <a href="{{ url_for('index') }}" class="btn btn-outline">ホームへ戻る</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  let dangerQuizzes = [];
+  let dangerCurrentIndex = 0;
+  let dangerScore = 0;
+
+  document.addEventListener('DOMContentLoaded', async function() {
+    const res = await fetch('/api/danger-quizzes');
+    dangerQuizzes = await res.json();
+    dangerQuizzes = shuffleArray(dangerQuizzes);
+  });
+
+  function shuffleArray(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function startDangerQuiz() {
+    dangerCurrentIndex = 0;
+    dangerScore = 0;
+    document.getElementById('dangerSetup').style.display = 'none';
+    document.getElementById('dangerArea').style.display = 'block';
+    document.getElementById('dangerTotalNum').textContent = dangerQuizzes.length;
+    showDangerQuestion();
+  }
+
+  function showDangerQuestion() {
+    if (dangerCurrentIndex >= dangerQuizzes.length) {
+      showDangerFinish();
+      return;
+    }
+    const q = dangerQuizzes[dangerCurrentIndex];
+    document.getElementById('dangerResult').style.display = 'none';
+    document.getElementById('dangerCurrentNum').textContent = dangerCurrentIndex + 1;
+    document.getElementById('dangerScoreInline').textContent = dangerScore;
+    const progress = (dangerCurrentIndex / dangerQuizzes.length) * 100;
+    document.getElementById('dangerProgressBar').style.width = progress + '%';
+    document.getElementById('dangerCode').textContent = q.code;
+    document.querySelectorAll('.danger-btn').forEach(btn => {
+      btn.disabled = false;
+      btn.classList.remove('selected', 'correct-answer', 'wrong-answer');
+    });
+  }
+
+  function selectDanger(selected) {
+    document.querySelectorAll('.danger-btn').forEach(btn => btn.disabled = true);
+    const q = dangerQuizzes[dangerCurrentIndex];
+    const isCorrect = selected === q.level;
+
+    if (isCorrect) {
+      dangerScore++;
+      updateProgress('dangerCorrect', dangerScore);
+    }
+
+    const levelLabels = { safe: '🟢 安全', caution: '🟡 注意', danger: '🔴 危険' };
+    const levelClass = { safe: 'safety-safe', caution: 'safety-caution', danger: 'safety-danger' };
+
+    const resultBadge = document.getElementById('dangerResultBadge');
+    resultBadge.textContent = isCorrect ? '✅ 正解！' : '❌ 不正解';
+    resultBadge.className = 'result-badge ' + (isCorrect ? 'correct' : 'wrong');
+
+    document.getElementById('dangerAnswer').innerHTML =
+      `<span class="safety-badge ${levelClass[q.level]}">${levelLabels[q.level]}</span>`;
+    document.getElementById('dangerReason').textContent = q.reason;
+    document.getElementById('dangerPractical').textContent = q.practical_note;
+    document.getElementById('dangerCustomer').textContent = q.customer_explanation;
+
+    const nextBtn = document.getElementById('dangerNextBtn');
+    nextBtn.textContent = dangerCurrentIndex + 1 >= dangerQuizzes.length ? '結果を見る' : '次へ →';
+    document.getElementById('dangerResult').style.display = 'block';
+  }
+
+  function nextDangerQuestion() {
+    dangerCurrentIndex++;
+    if (dangerCurrentIndex >= dangerQuizzes.length) {
+      showDangerFinish();
+    } else {
+      showDangerQuestion();
+    }
+  }
+
+  function showDangerFinish() {
+    document.getElementById('dangerArea').style.display = 'none';
+    document.getElementById('dangerFinish').style.display = 'block';
+    document.getElementById('dangerFinalScore').textContent = dangerScore;
+    document.getElementById('dangerFinalTotal').textContent = dangerQuizzes.length;
+    const rate = Math.round((dangerScore / dangerQuizzes.length) * 100);
+    let message = '';
+    if (rate >= 90) message = '🏆 危険度の判断力が高いです！';
+    else if (rate >= 70) message = '👏 よく判断できています！';
+    else if (rate >= 50) message = '📚 もう少し練習しましょう';
+    else message = '💪 危険なコードの特徴を学び直しましょう';
+    document.getElementById('dangerFinishRate').innerHTML = `<span class="rate-num">${rate}%</span> ${message}`;
+  }
+
+  function restartDangerQuiz() {
+    dangerQuizzes = shuffleArray(dangerQuizzes);
+    document.getElementById('dangerFinish').style.display = 'none';
+    document.getElementById('dangerSetup').style.display = 'block';
+  }
+</script>
+{% endblock %}

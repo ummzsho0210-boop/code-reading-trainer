@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}コンサル説明練習 - コード読解トレーナー{% endblock %}
+
+{% block content %}
+<div class="page-header" style="--cat-color: #6366F1">
+  <div class="container">
+    <div class="breadcrumb"><a href="{{ url_for('index') }}">ホーム</a> &rsaquo; コンサル説明練習</div>
+    <div class="page-header-content">
+      <span class="page-header-icon">💬</span>
+      <div>
+        <h1>AIコンサル説明練習</h1>
+        <p>技術的な説明をお客さんに分かりやすく言い換える練習です</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="consultant-intro">
+    <p>「技術的な説明」を読んで、お客さん向けにどう説明するか考えてみましょう。<br>
+    「説明を見る」ボタンで模範例を確認できます。</p>
+  </div>
+
+  <div class="consultant-progress-bar">
+    <div class="consultant-progress-fill" id="consultantProgress" style="width: 0%"></div>
+  </div>
+  <div class="consultant-nav">
+    <button class="btn btn-outline" id="prevBtn" onclick="changePhrase(-1)" disabled>← 前へ</button>
+    <span id="phraseCounter">1 / {{ phrases|length }}</span>
+    <button class="btn btn-outline" id="nextBtn" onclick="changePhrase(1)">次へ →</button>
+  </div>
+
+  <div id="phraseArea">
+    {% for phrase in phrases %}
+    <div class="phrase-card {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}">
+      <div class="phrase-category-tag">{{ phrase.category }}</div>
+
+      <div class="phrase-technical">
+        <div class="phrase-section-label">
+          <span class="label-icon">⚙️</span> 技術的な説明
+        </div>
+        <div class="phrase-technical-content">
+          <p>{{ phrase.technical }}</p>
+        </div>
+      </div>
+
+      <div class="phrase-think-area">
+        <div class="phrase-section-label">
+          <span class="label-icon">🤔</span> あなたならどう説明する？
+        </div>
+        <div class="think-box">
+          <p>まず自分でお客さん向けの説明を考えてみましょう...</p>
+          <textarea class="think-textarea" placeholder="ここに自分の言葉で書いてみてください（任意）"></textarea>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-reveal" onclick="revealCustomer(this)">
+        💬 お客さん向けの説明を見る
+      </button>
+
+      <div class="phrase-customer" style="display:none">
+        <div class="phrase-section-label">
+          <span class="label-icon">🗣️</span> お客さん向けの説明（模範例）
+        </div>
+        <blockquote class="customer-quote">{{ phrase.customer }}</blockquote>
+        <div class="phrase-key-point">
+          <span class="key-point-label">💡 ポイント</span>
+          <p>{{ phrase.key_point }}</p>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="consultant-actions">
+    <a href="{{ url_for('quiz') }}" class="btn btn-outline">クイズも挑戦する</a>
+    <a href="{{ url_for('index') }}" class="btn btn-ghost">ホームへ戻る</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  const totalPhrases = {{ phrases|length }};
+  let currentPhrase = 0;
+
+  function changePhrase(direction) {
+    const cards = document.querySelectorAll('.phrase-card');
+    cards[currentPhrase].classList.remove('active');
+    currentPhrase += direction;
+    currentPhrase = Math.max(0, Math.min(currentPhrase, totalPhrases - 1));
+    cards[currentPhrase].classList.add('active');
+
+    document.getElementById('phraseCounter').textContent = `${currentPhrase + 1} / ${totalPhrases}`;
+    document.getElementById('prevBtn').disabled = currentPhrase === 0;
+    document.getElementById('nextBtn').disabled = currentPhrase === totalPhrases - 1;
+
+    const progress = ((currentPhrase + 1) / totalPhrases) * 100;
+    document.getElementById('consultantProgress').style.width = progress + '%';
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function revealCustomer(btn) {
+    const card = btn.closest('.phrase-card');
+    const customerEl = card.querySelector('.phrase-customer');
+    customerEl.style.display = 'block';
+    btn.style.display = 'none';
+  }
+</script>
+{% endblock %}

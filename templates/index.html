@@ -44,7 +44,7 @@
   <div class="container">
     <h2 class="section-title">学習カテゴリ</h2>
     <div class="category-grid">
-      {% set cat_order = ['bash', 'files', 'html', 'python', 'danger', 'scenarios', 'ai'] %}
+      {% set cat_order = ['bash', 'files', 'html', 'python', 'danger', 'scenarios', 'ai', 'claudebasics'] %}
       {% for cat_id in cat_order %}
         {% set cat = categories[cat_id] %}
         <a href="{{ url_for('category', category_id=cat_id) }}" class="category-card" data-category="{{ cat_id }}" style="--cat-color: {{ cat.color }}">

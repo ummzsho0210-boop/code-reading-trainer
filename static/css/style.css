@@ -348,7 +348,7 @@ a { color: inherit; text-decoration: none; }
 .section-caution { border-color: #FCD34D; }
 .section-caution .section-header { background: #FFFBEB; border-color: #FCD34D; }
 
-/* === お客さん向けの引用 === */
+/* === お客様向けの引用 === */
 .customer-quote {
   background: #F0FDF4;
   border-left: 4px solid #10B981;
